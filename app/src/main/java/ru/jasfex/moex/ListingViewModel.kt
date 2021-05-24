@@ -11,7 +11,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class ListingViewModel(
-    private val dao: ListingDao
+    private val dao: ListingDao,
+    private val fetchListing: FetchListing
 ) : ViewModel() {
 
     private val _listing = MutableStateFlow<List<ListingEntity>>(emptyList())
@@ -22,12 +23,9 @@ class ListingViewModel(
             withContext(Dispatchers.IO) {
                 val cachedListing = dao.getListing()
                 if (cachedListing.isEmpty()) {
-                    val mockedListing = listOf(
-                        ListingEntity("SBER", "2021-05-24", 234.31, 248.77, 241.98, 246.04, 321543545.0),
-                        ListingEntity("SBERP", "2021-05-24", 201.56, 213.00, 212.84, 202.41, 9936912.0),
-                    )
-                    dao.saveListing(mockedListing)
-                    _listing.value = mockedListing
+                    val fetchedListing = fetchListing("2021-05-21")
+                    dao.saveListing(fetchedListing)
+                    _listing.value = fetchedListing
                 } else {
                     _listing.value = cachedListing
                 }
@@ -40,7 +38,11 @@ class ListingViewModel(
             return object : ViewModelProvider.Factory {
                 override fun <T : ViewModel?> create(modelClass: Class<T>): T {
                     val database = ListingDatabase.getInstance(context.applicationContext)
-                    val vm = ListingViewModel(dao = database.listingDao())
+                    val remoteRepository = RemoteRepository()
+                    val vm = ListingViewModel(
+                        dao = database.listingDao(),
+                        fetchListing = FetchListing(remoteRepository = remoteRepository)
+                    )
                     return vm as T
                 }
             }
