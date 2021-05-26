@@ -61,7 +61,7 @@ class MainActivity : ComponentActivity() {
                     ) {
                         composable(route = NavigationRoute.Listing.route) {
                             val date = it.arguments?.getString("date")
-                            ListingScreen(viewModel = listingViewModel)
+                            ListingScreen(viewModel = listingViewModel, navController = navController)
                         }
                         composable(route = NavigationRoute.Candles.route) {
                             val securityId = it.arguments!!.getString("securityId")!!
