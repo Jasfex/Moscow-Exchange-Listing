@@ -4,11 +4,12 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import ru.jasfex.moex.data.local.model.CandleEntity
 import ru.jasfex.moex.data.local.model.HasListingEntity
 import ru.jasfex.moex.data.local.model.ListingEntity
 
 @Database(
-    entities = [ListingEntity::class, HasListingEntity::class],
+    entities = [ListingEntity::class, HasListingEntity::class, CandleEntity::class],
     version = 1,
     exportSchema = false
 )

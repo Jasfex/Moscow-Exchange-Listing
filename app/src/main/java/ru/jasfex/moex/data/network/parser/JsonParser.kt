@@ -64,8 +64,8 @@ object JsonParser {
                 low = arr.getString(3),
                 value = arr.getString(4),
                 volume = arr.getString(5),
-                begin = arr.getString(6).substring(0, 10),
-                end = arr.getString(7).substring(0, 10)
+                begin = arr.getString(6),
+                end = arr.getString(7)
             )
         }
     }

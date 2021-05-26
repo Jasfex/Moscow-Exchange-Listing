@@ -38,30 +38,28 @@ class RepositoryImpl(
         date: String,
         timeInterval: CandleTimeInterval
     ): List<CandleItem> {
-        return networkRepo.getCandles(
-            securityId = securityId,
-            date = date,
-            timeInterval = timeInterval
-        )
+        val candles: List<CandleItem> =
+            localRepo.getCandles(
+                securityId = securityId,
+                date = date,
+                timeInterval = timeInterval
+            )
 
-//        val candles: List<CandleItem> =
-//            localRepo.getCandles(securityId = securityId, date = date, timeInterval = timeInterval)
-//
-//        return if (candles.isNotEmpty()) {
-//            candles
-//        } else {
-//            val fetchedCandles = networkRepo.getCandles(
-//                securityId = securityId,
-//                date = date,
-//                timeInterval = timeInterval
-//            )
-//            localRepo.saveCandles(
-//                securityId = securityId,
-//                date = date,
-//                timeInterval = timeInterval,
-//                candles = candles
-//            )
-//            fetchedCandles
-//        }
+        return if (candles.isNotEmpty()) {
+            candles
+        } else {
+            val fetchedCandles = networkRepo.getCandles(
+                securityId = securityId,
+                date = date,
+                timeInterval = timeInterval
+            )
+            localRepo.saveCandles(
+                securityId = securityId,
+                date = date,
+                timeInterval = timeInterval,
+                candles = fetchedCandles
+            )
+            fetchedCandles
+        }
     }
 }

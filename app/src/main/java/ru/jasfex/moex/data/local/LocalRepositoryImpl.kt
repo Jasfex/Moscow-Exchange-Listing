@@ -52,17 +52,27 @@ class LocalRepositoryImpl(
         securityId: String,
         date: String,
         timeInterval: CandleTimeInterval
-    ): List<CandleItem> {
-        return emptyList()
-    }
+    ): List<CandleItem> =
+        withContext(ioDispatcher) {
+            val rawCandles =
+                listingDao.getCandles(
+                    securityId = securityId,
+                    date = date,
+                    timeInterval = timeInterval
+                )
+            rawCandles.toDomain()
+        }
 
     override suspend fun saveCandles(
         securityId: String,
         date: String,
         timeInterval: CandleTimeInterval,
         candles: List<CandleItem>
-    ) {
-    }
+    ) =
+        withContext(ioDispatcher) {
+            val rawCandles = candles.toLocal(securityId, date, timeInterval)
+            listingDao.saveCandles(rawCandles)
+        }
 
     private fun generateDaysBefore(
         fromDate: String,
@@ -71,7 +81,7 @@ class LocalRepositoryImpl(
     ): List<CalendarItem> {
         val calendar = Calendar.getInstance()
         calendar.set(Calendar.YEAR, fromDate.substring(0, 4).toInt())
-        calendar.set(Calendar.MONTH, fromDate.substring(5,7).toInt() - 1)
+        calendar.set(Calendar.MONTH, fromDate.substring(5, 7).toInt() - 1)
         calendar.set(Calendar.DAY_OF_MONTH, fromDate.substring(8, 10).toInt())
 
         val generatedDays = mutableListOf<CalendarItem>()
@@ -82,7 +92,8 @@ class LocalRepositoryImpl(
             calendar.add(Calendar.DAY_OF_MONTH, -1)
         }
 
-        val result = existingDays + generatedDays.filter { day -> day.date !in existingDays.map { it.date } }
+        val result =
+            existingDays + generatedDays.filter { day -> day.date !in existingDays.map { it.date } }
         return result.sortedByDescending { it.date }
     }
 
@@ -98,6 +109,5 @@ class LocalRepositoryImpl(
         calendar.add(Calendar.DAY_OF_MONTH, -1)
         return calendar.toDate()
     }
-
 
 }

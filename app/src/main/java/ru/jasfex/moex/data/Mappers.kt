@@ -1,13 +1,11 @@
 package ru.jasfex.moex.data
 
-import ru.jasfex.moex.domain.model.ListingItem
-import ru.jasfex.moex.domain.model.CalendarDateStatus
-import ru.jasfex.moex.domain.model.CalendarItem
-import ru.jasfex.moex.domain.model.CandleItem
+import ru.jasfex.moex.data.local.model.CandleEntity
 import ru.jasfex.moex.data.local.model.ListingEntity
 import ru.jasfex.moex.data.local.model.HasListingEntity
 import ru.jasfex.moex.data.network.model.ListingItemDTO
 import ru.jasfex.moex.data.network.model.CandleDTO
+import ru.jasfex.moex.domain.model.*
 
 fun ListingEntity.toDomain(): ListingItem =
     ListingItem(
@@ -71,3 +69,41 @@ fun CandleDTO.toDomain(): CandleItem =
 
 @JvmName("toDomainFromCandleDTO")
 fun List<CandleDTO>.toDomain(): List<CandleItem> = map { itemDTO -> itemDTO.toDomain() }
+
+fun CandleEntity.toDomain(): CandleItem =
+    CandleItem(
+        open = open,
+        close = close,
+        low = low,
+        high = high,
+        volume = volume,
+        timeStart = timeStart,
+        timeEnd = timeEnd
+    )
+
+@JvmName("toDomainFromCandleEntity")
+fun List<CandleEntity>.toDomain(): List<CandleItem> = map { entity -> entity.toDomain() }
+
+fun CandleItem.toLocal(
+    securityId: String,
+    date: String,
+    timeInterval: CandleTimeInterval
+): CandleEntity =
+    CandleEntity(
+        securityId = securityId,
+        timeInterval = timeInterval,
+        date = date,
+        open = open,
+        close = close,
+        low = low,
+        high = high,
+        volume = volume,
+        timeStart = timeStart,
+        timeEnd = timeEnd
+    )
+
+fun List<CandleItem>.toLocal(
+    securityId: String,
+    date: String,
+    timeInterval: CandleTimeInterval
+): List<CandleEntity> = map { item -> item.toLocal(securityId, date, timeInterval) }
