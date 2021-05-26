@@ -3,11 +3,16 @@ package ru.jasfex.moex.data.local
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import ru.jasfex.moex.domain.model.ListingItem
 import ru.jasfex.moex.domain.LocalRepository
 import ru.jasfex.moex.data.local.model.HasListingEntity
 import ru.jasfex.moex.data.toDomain
 import ru.jasfex.moex.data.toLocal
+import ru.jasfex.moex.domain.model.CalendarItem
+import ru.jasfex.moex.domain.model.CandleItem
+import ru.jasfex.moex.domain.model.CandleTimeInterval
+import ru.jasfex.moex.domain.model.ListingItem
+import ru.jasfex.moex.domain.model.CalendarDateStatus
+import java.util.*
 
 class LocalRepositoryImpl(
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
@@ -26,7 +31,7 @@ class LocalRepositoryImpl(
 
     override suspend fun getListing(date: String): List<ListingItem> =
         withContext(ioDispatcher) {
-            val localListing = listingDao.getListing()
+            val localListing = listingDao.getListing(date = date)
             localListing.toDomain()
         }
 
@@ -35,5 +40,64 @@ class LocalRepositoryImpl(
             listingDao.saveListing(listing.toLocal())
             listingDao.setHasListing(HasListingEntity(date = date, value = listing.isNotEmpty()))
         }
+
+    override suspend fun getCalendar(): List<CalendarItem> =
+        withContext(ioDispatcher) {
+            val dates = listingDao.getCalendar().toDomain()
+            val lastDay: String = dates.maxOfOrNull { it.date } ?: getYesterdayDate()
+            generateDaysBefore(fromDate = lastDay, count = 365, existingDays = dates)
+        }
+
+    override suspend fun getCandles(
+        securityId: String,
+        date: String,
+        timeInterval: CandleTimeInterval
+    ): List<CandleItem> {
+        return emptyList()
+    }
+
+    override suspend fun saveCandles(
+        securityId: String,
+        date: String,
+        timeInterval: CandleTimeInterval,
+        candles: List<CandleItem>
+    ) {
+    }
+
+    private fun generateDaysBefore(
+        fromDate: String,
+        count: Int,
+        existingDays: List<CalendarItem>
+    ): List<CalendarItem> {
+        val calendar = Calendar.getInstance()
+        calendar.set(Calendar.YEAR, fromDate.substring(0, 4).toInt())
+        calendar.set(Calendar.MONTH, fromDate.substring(5,7).toInt() - 1)
+        calendar.set(Calendar.DAY_OF_MONTH, fromDate.substring(8, 10).toInt())
+
+        val generatedDays = mutableListOf<CalendarItem>()
+
+        repeat(times = count) {
+            val date = calendar.toDate()
+            generatedDays.add(CalendarItem(date = date, status = CalendarDateStatus.Unknown))
+            calendar.add(Calendar.DAY_OF_MONTH, -1)
+        }
+
+        val result = existingDays + generatedDays.filter { day -> day.date !in existingDays.map { it.date } }
+        return result.sortedByDescending { it.date }
+    }
+
+    private fun Calendar.toDate(): String {
+        val year = get(Calendar.YEAR).toString()
+        val month = (get(Calendar.MONTH) + 1).toString().padStart(2, '0')
+        val day = get(Calendar.DAY_OF_MONTH).toString().padStart(2, '0')
+        return "$year-$month-$day"
+    }
+
+    private fun getYesterdayDate(): String {
+        val calendar = Calendar.getInstance()
+        calendar.add(Calendar.DAY_OF_MONTH, -1)
+        return calendar.toDate()
+    }
+
 
 }

@@ -1,6 +1,7 @@
 package ru.jasfex.moex.data.network.parser
 
 import org.json.JSONObject
+import ru.jasfex.moex.data.network.model.CandleDTO
 import ru.jasfex.moex.data.network.model.ListingCursor
 import ru.jasfex.moex.data.network.model.ListingItemDTO
 
@@ -24,7 +25,6 @@ object JsonParser {
         val json = JSONObject(jsonString).getJSONObject("history").getJSONArray("data")
         return (0 until json.length()).map { index ->
             val arr = json.getJSONArray(index)
-
             ListingItemDTO(
                 BOARDID = arr.getString(0),
                 TRADEDATE = arr.getString(1),
@@ -47,6 +47,25 @@ object JsonParser {
                 ADMITTEDVALUE = arr.getString(18),
                 WAVAL = arr.getString(19),
                 TRADINGSESSION = arr.getString(20)
+            )
+        }
+    }
+
+    fun retrieveCandles(
+        jsonString: String
+    ): List<CandleDTO> {
+        val json = JSONObject(jsonString).getJSONObject("candles").getJSONArray("data")
+        return (0 until json.length()).map { index ->
+            val arr = json.getJSONArray(index)
+            CandleDTO(
+                open = arr.getString(0),
+                close = arr.getString(1),
+                high = arr.getString(2),
+                low = arr.getString(3),
+                value = arr.getString(4),
+                volume = arr.getString(5),
+                begin = arr.getString(6).substring(0, 10),
+                end = arr.getString(7).substring(0, 10)
             )
         }
     }

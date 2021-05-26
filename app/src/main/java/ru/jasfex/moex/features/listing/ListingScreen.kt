@@ -3,6 +3,7 @@ package ru.jasfex.moex.features.listing
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material.*
@@ -13,9 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import ru.jasfex.moex.NavigationRoute
 import ru.jasfex.moex.domain.model.ListingItem
@@ -27,21 +26,25 @@ fun ListingScreen(
     viewModel: ListingViewModel,
     navController: NavController
 ) {
-    val uiState: ListingScreenState by viewModel.uiState.collectAsState()
+    val uiState: ListingScreenState by viewModel.uiState.collectAsState(ListingScreenState.Loading)
 
     uiState.let {
         when (it) {
             ListingScreenState.Loading -> ShowLoading()
-            ListingScreenState.Empty -> ShowEmpty()
+            ListingScreenState.Empty -> ShowEmpty(
+                onRefresh = viewModel::onRefreshClicked,
+                onSelectDateClicked = {
+                    navController.navigate(NavigationRoute.Calendar.route)
+                })
             is ListingScreenState.Error -> ShowError(state = it, viewModel::onRefreshClicked)
             is ListingScreenState.Success -> ShowSuccess(
                 state = it,
                 onSearch = viewModel::onSearch,
-                onSelectDateClicked = { navController.navigate(NavigationRoute.Calendar.route) },
+                onSelectDateClicked = {
+                    navController.navigate(NavigationRoute.Calendar.route)
+                },
                 onListingItemClicked = { securityId: String, date: String ->
-                    navController.navigate(
-                        "candles/$securityId/$date/60"
-                    )
+                    navController.navigate("candles/$securityId/$date/60")
                 }
             )
         }
@@ -68,9 +71,35 @@ private fun ShowLoading() {
 }
 
 @Composable
-private fun ShowEmpty() {
+private fun ShowEmpty(
+    onRefresh: () -> Unit,
+    onSelectDateClicked: () -> Unit
+) {
     ShowInCenter {
-        Text(text = "Listing is empty")
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(text = "Listing is empty", modifier = Modifier.padding(horizontal = 8.dp))
+
+            Row(
+                modifier = Modifier.padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                OutlinedButton(
+                    onClick = onSelectDateClicked,
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Text(text = "SELECT ANOTHER DATE")
+                }
+                
+                Spacer(modifier = Modifier.width(16.dp))
+
+                Button(onClick = onRefresh, shape = RoundedCornerShape(16.dp)) {
+                    Text(text = "Try Refresh")
+                }
+            }
+        }
     }
 }
 
@@ -134,6 +163,7 @@ private fun ShowSuccess(
             Text(text = "Nothing found", modifier = Modifier.padding(8.dp))
         } else {
             LazyColumn(
+                state = rememberLazyListState(),
                 modifier = Modifier
                     .padding(8.dp)
                     .fillMaxWidth()

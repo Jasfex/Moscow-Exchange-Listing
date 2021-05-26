@@ -4,6 +4,9 @@ import ru.jasfex.moex.domain.model.ListingItem
 import ru.jasfex.moex.domain.LocalRepository
 import ru.jasfex.moex.domain.NetworkRepository
 import ru.jasfex.moex.domain.Repository
+import ru.jasfex.moex.domain.model.CalendarItem
+import ru.jasfex.moex.domain.model.CandleItem
+import ru.jasfex.moex.domain.model.CandleTimeInterval
 
 class RepositoryImpl(
     private val localRepo: LocalRepository,
@@ -26,4 +29,39 @@ class RepositoryImpl(
         }
     }
 
+    override suspend fun getCalendar(): List<CalendarItem> {
+        return localRepo.getCalendar()
+    }
+
+    override suspend fun getCandles(
+        securityId: String,
+        date: String,
+        timeInterval: CandleTimeInterval
+    ): List<CandleItem> {
+        return networkRepo.getCandles(
+            securityId = securityId,
+            date = date,
+            timeInterval = timeInterval
+        )
+
+//        val candles: List<CandleItem> =
+//            localRepo.getCandles(securityId = securityId, date = date, timeInterval = timeInterval)
+//
+//        return if (candles.isNotEmpty()) {
+//            candles
+//        } else {
+//            val fetchedCandles = networkRepo.getCandles(
+//                securityId = securityId,
+//                date = date,
+//                timeInterval = timeInterval
+//            )
+//            localRepo.saveCandles(
+//                securityId = securityId,
+//                date = date,
+//                timeInterval = timeInterval,
+//                candles = candles
+//            )
+//            fetchedCandles
+//        }
+    }
 }

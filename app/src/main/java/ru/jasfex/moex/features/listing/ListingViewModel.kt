@@ -2,18 +2,18 @@ package ru.jasfex.moex.features.listing
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.NavController
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import ru.jasfex.moex.NavigationRoute
 import ru.jasfex.moex.domain.Repository
 import java.lang.IllegalStateException
+import java.util.*
 
 
 class ListingViewModel(
-    private val repository: Repository
+    private val repository: Repository,
+    private val date: String?
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<ListingScreenState>(ListingScreenState.Loading)
@@ -25,7 +25,7 @@ class ListingViewModel(
     init {
         currentJob?.cancel()
         currentJob = viewModelScope.launch {
-            getListing()
+            getListing(givenDate = date)
         }
     }
 
@@ -49,9 +49,14 @@ class ListingViewModel(
         }
     }
 
-    private suspend fun getListing() {
+    private suspend fun getListing(givenDate: String? = null) {
         try {
-            val date = "2021-05-24"
+            val date = givenDate ?: Calendar.getInstance().run {
+                val year = get(Calendar.YEAR).toString()
+                val month = (get(Calendar.MONTH) + 1).toString().padStart(2, '0')
+                val day = get(Calendar.DAY_OF_MONTH).toString().padStart(2, '0')
+                "$year-$month-$day"
+            }
             val items = repository.getListing(date = date)
             if (items.isEmpty()) {
                 _uiState.value = ListingScreenState.Empty
