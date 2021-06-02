@@ -2,71 +2,82 @@ package ru.jasfex.moex.features.listing
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import ru.jasfex.moex.domain.Repository
-import java.lang.IllegalStateException
-import java.util.*
-
+import ru.jasfex.moex.domain.model.CandleTimeInterval
+import ru.jasfex.moex.domain.usecase.GetCandles
+import ru.jasfex.moex.domain.usecase.GetListing
 
 class ListingViewModel(
-    private val repository: Repository,
-    private val date: String?
+    private val getListing: GetListing,
+    private val getCandles: GetCandles
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow<ListingScreenState>(ListingScreenState.Loading)
-    val uiState: StateFlow<ListingScreenState> get() = _uiState
+    private val _uiState = MutableStateFlow<ListingUiState>(ListingUiState.Loading)
+    val uiState: StateFlow<ListingUiState>
+        get() = _uiState
 
-    @Volatile
-    private var currentJob: Job? = null
+    private val date: String = "2021-06-01"
 
     init {
-        currentJob?.cancel()
-        currentJob = viewModelScope.launch {
-            getListing(givenDate = date)
+        viewModelScope.launch {
+            refresh()
         }
     }
 
-    fun onRefreshClicked() {
-        currentJob?.cancel()
-        currentJob = viewModelScope.launch {
-            _uiState.value = ListingScreenState.Loading
-            getListing()
-        }
+    fun onRefresh() {
+        refresh()
+    }
+
+    fun onRequestCandles(securityId: String) {
+        loadCandles(securityId)
     }
 
     fun onSearch(search: String) {
-        val search = search.trim()
-        _uiState.value.let { state ->
-            when (state) {
-                is ListingScreenState.Success -> {
-                    _uiState.value = state.copy(search = search)
+        val state = uiState.value
+        if (state is ListingUiState.Content) {
+            _uiState.value = state.copy(filteredListing = state.listing.filter {
+                it.securityId.startsWith(
+                    search,
+                    ignoreCase = true
+                )
+            })
+        }
+    }
+
+    private fun refresh() {
+        viewModelScope.launch {
+            _uiState.value = try {
+                val listing = getListing(date = date)
+                if (listing.isEmpty()) {
+                    ListingUiState.Empty
+                } else {
+                    ListingUiState.Content(listing = listing, filteredListing = listing, candles = emptyMap())
                 }
-                else -> throw IllegalStateException("search can't be performed from current state!")
+            } catch (th: Throwable) {
+                ListingUiState.Error(throwable = th)
             }
         }
     }
 
-    private suspend fun getListing(givenDate: String? = null) {
-        try {
-            val date = givenDate ?: Calendar.getInstance().run {
-                add(Calendar.DAY_OF_MONTH, -1)
-                val year = get(Calendar.YEAR).toString()
-                val month = (get(Calendar.MONTH) + 1).toString().padStart(2, '0')
-                val day = get(Calendar.DAY_OF_MONTH).toString().padStart(2, '0')
-                "$year-$month-$day"
+    private fun loadCandles(securityId: String) {
+        viewModelScope.launch {
+            val state = uiState.value
+            if (state is ListingUiState.Content) {
+                val requestedCandles = getCandles(
+                    date = date,
+                    securityId = securityId,
+                    timeInterval = CandleTimeInterval.TenMinutes
+                )
+                if (requestedCandles.isNotEmpty()) {
+                    val updatedCandles = state.candles.toMutableMap()
+                    updatedCandles[securityId] = requestedCandles
+                    _uiState.value = state.copy(candles = updatedCandles)
+                }
             }
-            val items = repository.getListing(date = date)
-            if (items.isEmpty()) {
-                _uiState.value = ListingScreenState.Empty
-            } else {
-                _uiState.value = ListingScreenState.Success(items = items, date = date)
-            }
-        } catch (th: Throwable) {
-            _uiState.value = ListingScreenState.Error(throwable = th)
         }
     }
 
 }
+

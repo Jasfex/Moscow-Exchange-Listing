@@ -12,6 +12,8 @@ import ru.jasfex.moex.domain.model.CandleItem
 import ru.jasfex.moex.domain.model.CandleTimeInterval
 import ru.jasfex.moex.domain.model.ListingItem
 import ru.jasfex.moex.domain.model.CalendarDateStatus
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import java.util.*
 
 class LocalRepositoryImpl(
@@ -83,6 +85,9 @@ class LocalRepositoryImpl(
         calendar.set(Calendar.YEAR, fromDate.substring(0, 4).toInt())
         calendar.set(Calendar.MONTH, fromDate.substring(5, 7).toInt() - 1)
         calendar.set(Calendar.DAY_OF_MONTH, fromDate.substring(8, 10).toInt())
+
+
+//        OffsetDateTime.of(2020, 6, 2, 9, 27, 0, 0, ZoneOffset.ofHours(3))
 
         val generatedDays = mutableListOf<CalendarItem>()
 

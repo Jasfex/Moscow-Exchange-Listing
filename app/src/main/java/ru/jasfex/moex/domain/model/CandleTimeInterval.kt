@@ -2,15 +2,17 @@ package ru.jasfex.moex.domain.model
 
 import android.util.Log
 
-enum class CandleTimeInterval(val value: Int) {
-    Minute(1),
-    TenMinutes(10),
-    Hour(60),
-    Day(24),
-    Week(7),
-    Month(31),
-    Quarter(4)
+enum class CandleTimeInterval(val value: Int, val title: String) {
+    Minute(1, "1m"),
+    TenMinutes(10, "10m"),
+    Hour(60, "1h"),
+    Day(24, "1D"),
+    Week(7, "1W"),
+    Month(31, "1M"),
+    Quarter(4, "1Q")
 }
+
+
 
 fun String.toCandleTimeInterval(): CandleTimeInterval =
     when (toIntOrNull() ?: -1) {

@@ -11,7 +11,13 @@ import ru.jasfex.moex.domain.model.CandleTimeInterval
 @TypeConverters(CandleTimeIntervalConverter::class)
 interface ListingDao {
 
-    @Query("SELECT * FROM listing_table WHERE date = :date ORDER BY date, securityId")
+    @Query(
+        """
+        SELECT * FROM listing_table 
+        WHERE date = :date
+        ORDER BY date, securityId 
+        """
+    )
     fun getListing(date: String): List<ListingEntity>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -36,7 +42,11 @@ interface ListingDao {
     fun getCalendar(): List<HasListingEntity>
 
     @Query("SELECT * FROM candles_table WHERE securityId = :securityId AND date = :date AND timeInterval = :timeInterval ORDER BY timeStart")
-    fun getCandles(securityId: String, date: String, timeInterval: CandleTimeInterval): List<CandleEntity>
+    fun getCandles(
+        securityId: String,
+        date: String,
+        timeInterval: CandleTimeInterval
+    ): List<CandleEntity>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun saveCandles(candles: List<CandleEntity>)
