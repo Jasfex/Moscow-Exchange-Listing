@@ -1,12 +1,9 @@
 package ru.jasfex.moex.data
 
-import ru.jasfex.moex.domain.model.ListingItem
 import ru.jasfex.moex.domain.LocalRepository
 import ru.jasfex.moex.domain.NetworkRepository
 import ru.jasfex.moex.domain.Repository
-import ru.jasfex.moex.domain.model.CalendarItem
-import ru.jasfex.moex.domain.model.CandleItem
-import ru.jasfex.moex.domain.model.CandleTimeInterval
+import ru.jasfex.moex.domain.model.*
 
 class RepositoryImpl(
     private val localRepo: LocalRepository,
@@ -61,5 +58,13 @@ class RepositoryImpl(
             )
             fetchedCandles
         }
+    }
+
+    override suspend fun getAccounts(): List<Account> {
+        return emptyList() // TODO()
+    }
+
+    override suspend fun openAccount(account: Account) {
+        // TODO()
     }
 }
