@@ -80,4 +80,7 @@ dependencies {
     kapt("androidx.room:room-compiler:${rootProject.extra["room_version"]}")
     implementation("androidx.room:room-ktx:${rootProject.extra["room_version"]}")
 
+    // DataStore
+    implementation("androidx.datastore:datastore-preferences:1.0.0-beta01")
+
 }
