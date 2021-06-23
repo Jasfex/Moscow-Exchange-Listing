@@ -2,6 +2,7 @@
 
 
 **API:** https://iss.moex.com/iss/reference/
+
 **Technologies**:
   - Kotlin
   - Jetpack Compose
@@ -9,6 +10,7 @@
   - Room
   - Coroutines/Flow
   - Android Custom View
+
 
 **App preview:**
 
