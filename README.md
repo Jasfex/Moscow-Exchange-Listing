@@ -5,4 +5,5 @@
 **API:** https://iss.moex.com/iss/reference/
 
 **App preview:**
+
 ![App preview](preview.gif)
